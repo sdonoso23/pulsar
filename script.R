@@ -89,7 +89,7 @@ ggplot(data=datahclust,aes(x=PC1,y=PC2,color=cluster))+geom_point()+
     facet_wrap(~k,ncol=3)+ggtitle("Ward Clustering")
 ggplot(data=datahclust,aes(x=meanip,color=cluster))+geom_density()+
     facet_wrap(~k,ncol=3)
-?dist
+
 datahclust %>%
     group_by_("k","cluster") %>%
     summarize_all(mean) %>%
@@ -100,6 +100,7 @@ datahclust %>%
 
 ##silhouette
 aaa<-silhouette(vectors[[3]],distance)
+aaa
 #silhouette is in col 3
 
 sil.hclust<-sil.clust(vectors,distance,k[2:10])
