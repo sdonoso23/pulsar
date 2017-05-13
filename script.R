@@ -47,6 +47,9 @@ fviz_pca_var(pca,col.var="contrib")
 ####k means####
 
 k<-c(1:10)
+colnames<-c("One","Two","Three","Four","Five","Six","Seven",
+          "Eight","Nine","Ten")
+
 
 #get sum of square for k = 1 to 10
 kmeansss<-kmeans.ss(dataset,k)
@@ -55,17 +58,13 @@ kss<-data.frame(k=k,ss=kmeansss)
 ggplot(kss,aes(x=k,y=ss))+geom_line()+geom_point()
 #get vectors
 kmeansclusters<-kmeans.clust(dataset,k)
-knames<-c("One","Two","Three","Four","Five","Six","Seven",
-          "Eight","Nine","Ten")
 names(kmeansclusters)<-knames
 
+
 #preparing data for plotting
-datakmeans<-datapca %>%
-    bind_cols(kmeansclusters) %>%
-    gather(One:Ten,key=k,value=cluster)
-    
-datakmeans$cluster<-factor(datakmeans$cluster,levels=c(1:10))
-datakmeans$k<-factor(datakmeans$k,levels=knames)
+
+datakmeans<-addclustdf(data = datapca,vectors = kmeansclusters,k = k,
+                       colnames = colnames)
 
 #plots
 ggplot(data=datakmeans,aes(x=PC1,y=PC2,color=cluster))+geom_point()+
@@ -73,33 +72,24 @@ ggplot(data=datakmeans,aes(x=PC1,y=PC2,color=cluster))+geom_point()+
 ggplot(data=datakmeans,aes(x=meandm,color=cluster))+geom_density()+
     facet_wrap(~k,ncol=3)
 
-###hierarchical clustering###
+####hierarchical clustering####
 
 ##calculate distance matrix
 distance<-dist(dataset,method="euclidean")
-hclust()
 
-vectors<-clustvectors(distance,k,"ward.D")
-
-knames<-c("One","Two","Three","Four","Five","Six","Seven",
-          "Eight","Nine","Ten")
-names(vectors)<-knames
+vectors<-hclusters(distance,k,"ward.D")
 
 #preparing data for plotting
-datahclust<-datapca %>%
-    bind_cols(vectors) %>%
-    gather_(key="k",value="cluster",gather_cols = knames)
 
-
-datahclust$cluster<-factor(datahclust$cluster,levels=c(1:10))
-datahclust$k<-factor(datahclust$k,levels=knames)
+datahclust<-addclustdf(data = datapca,vectors = vectors,k = k,
+                       colnames = colnames)
 
 #plots
 ggplot(data=datahclust,aes(x=PC1,y=PC2,color=cluster))+geom_point()+
-    facet_wrap(~k,ncol=3)
+    facet_wrap(~k,ncol=3)+ggtitle("Ward Clustering")
 ggplot(data=datahclust,aes(x=meanip,color=cluster))+geom_density()+
     facet_wrap(~k,ncol=3)
-
+?dist
 datahclust %>%
     group_by_("k","cluster") %>%
     summarize_all(mean) %>%
@@ -108,3 +98,10 @@ datahclust %>%
                   summarize(count=n()),by=c("k","cluster")) 
     
 
+##silhouette
+aaa<-silhouette(vectors[[3]],distance)
+#silhouette is in col 3
+
+sil.hclust<-sil.clust(vectors,distance,k[2:10])
+
+ggplot()+geom_line(aes(x=k[2:10],y=sil.hclust))
