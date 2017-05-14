@@ -1,6 +1,7 @@
 library(tidyverse)
 library(cluster)
 library(factoextra)
+library(NbClust)
 source("r/functions.R")
 
 dataset<-read_csv("data/HTRU_2bis.csv")
@@ -31,6 +32,11 @@ multiplot(plotlist = histplots,cols=3)
 
 ###check relations in outliers
 
+
+###scale dataset
+
+scaledata<-as.data.frame(scale(dataset))
+
 ###pca###
 
 pca<-prcomp(dataset,scale=TRUE)
@@ -45,6 +51,8 @@ fviz_pca_var(pca,col.var="contrib")
 
 
 ####k means####
+###calculates cluster centroids and assigns each observation to the nearest
+###cluster centroid
 
 k<-c(1:10)
 colnames<-c("One","Two","Three","Four","Five","Six","Seven",
@@ -52,13 +60,12 @@ colnames<-c("One","Two","Three","Four","Five","Six","Seven",
 
 
 #get sum of square for k = 1 to 10
-kmeansss<-kmeans.ss(dataset,k)
+kmeansss<-kmeans.ss(scaledata,k)
 kss<-data.frame(k=k,ss=kmeansss)
 #plot of ss vs k    
 ggplot(kss,aes(x=k,y=ss))+geom_line()+geom_point()
 #get vectors
-kmeansclusters<-kmeans.clust(dataset,k)
-names(kmeansclusters)<-knames
+kmeansclusters<-kmeans.clust(scaledata,k)
 
 
 #preparing data for plotting
@@ -73,9 +80,14 @@ ggplot(data=datakmeans,aes(x=meandm,color=cluster))+geom_density()+
     facet_wrap(~k,ncol=3)
 
 ####hierarchical clustering####
+##depends on the used distance matrix and the method for calculating
+##cluster distance
 
 ##calculate distance matrix
-distance<-dist(dataset,method="euclidean")
+distance<-dist(scaledata,method="euclidean")
+
+hclust<-hclust(distance,method="ward.D")
+plot(hclust,hang=-1,labels=FALSE)
 
 vectors<-hclusters(distance,k,"ward.D")
 
@@ -98,11 +110,28 @@ datahclust %>%
                   summarize(count=n()),by=c("k","cluster")) 
     
 
-##silhouette
-aaa<-silhouette(vectors[[3]],distance)
-aaa
+####PAM####
+###uses medoids, the most central object in the cluster or the one with
+###minimum dissimilarity to all the other points in the cluster.
+###dissimilarity is calculated using manhattan distance
+
+pam1<-pam(dataset,2)
+
+###silhouette
+##calculate the average distance of a point to each of it's cluster members
+##the calculate the average distance of the point to each of the points
+##in other clusters
+##the clusters with the min avg distance is the "neighbor cluster"
+##then silhouette of the point: 
+##(avg dist to neighbor cluster - avg dist to own cluster)/max between 2
+
 #silhouette is in col 3
 
 sil.hclust<-sil.clust(vectors,distance,k[2:10])
 
 ggplot()+geom_line(aes(x=k[2:10],y=sil.hclust))
+
+
+####nbclust
+
+a<-NbClust(scaledata,diss=distance,distance=NULL,min.nc=2,max.nc=10,method="single",index="gap")
