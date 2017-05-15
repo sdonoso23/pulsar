@@ -14,6 +14,22 @@ multiplehist<-function(data){
     return(lista)
 }
 
+multiplehist2<-function(data,color){
+    numeric<-map_lgl(data,is.numeric)
+    newdata<-data[,numeric]
+    aux<- function(data,column,color){
+        a<-ggplot(data=data,mapping=aes_string(x=column,color=color))+geom_density()+labs(x=column)
+        return(a)
+    }
+    colnames(newdata)
+    lista<-map(colnames(newdata),~aux(data,.,color))
+    return(lista)
+}
+
+
+
+
+
 ###function to plot multiple ggplots together, found on R Cookbook
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     require(grid)
@@ -64,6 +80,17 @@ kmeans.clust<-function(data,k){
     return(as.data.frame(map(k,~aux(data,.))))        
 }
 
+kmeans.results<-function(data,k){
+    aux<-function(data,k){
+        set.seed(1234)
+        vec<-kmeans(data,nstart = 30,centers = k)
+        
+        return(list(vec$tot.withinss,vec$cluster))
+    }
+    return(map(k,~aux(data,.)))      
+}
+
+
 #extract vector of clusters off hclust
 hclusters<-function(dmatrix,k,method){
     clust<-hclust(dmatrix,method=method)
@@ -99,5 +126,13 @@ sil.clust<-function(clusters,distance,k){
     return(map_dbl(k,~aux(clusters,distance,.)))
 }
 
-
+pam.clusters<-function(data,k){
+    aux<-function(data,k){
+        set.seed(1234)
+        vec<-pam(data,k=k)
+        
+        return(vec$clustering)
+    }
+    return(map(k,~aux(data,.)))      
+}
 
