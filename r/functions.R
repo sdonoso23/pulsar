@@ -92,7 +92,8 @@ kmeans.results<-function(data,k){
 
 
 #extract vector of clusters off hclust
-hclusters<-function(dmatrix,k,method){
+
+hcluster<-function(dmatrix,k,method){
     clust<-hclust(dmatrix,method=method)
     aux<-function(hclust,k){
         return(cutree(hclust,k))
@@ -136,3 +137,10 @@ pam.clusters<-function(data,k){
     return(map(k,~aux(data,.)))      
 }
 
+clara.clusters<-function(data,k,method){
+    aux<-function(data,k,method){
+        set.seed(1234)
+        vec<-clara(data,k,metric=method)$clustering
+    }
+    return(as.data.frame(map(k,~aux(data,.,"euclidean"))))
+}
