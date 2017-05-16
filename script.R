@@ -26,6 +26,7 @@ colSums(dataset==0)
 #scale data
 normdata<-as.data.frame(scale(dataset[,]))
 
+
 #exploratory plots
 outliersplot<-normdata %>%
     gather(meanip:skewdm,key=var,value=value) %>%
@@ -565,3 +566,5 @@ plotlistavg3<-dataavg %>%
 
 ggsave("plots/avgdensityk3.jpg",
        multiplot(plotlist=plotlistavg3,cols=3))
+
+
