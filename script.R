@@ -498,7 +498,7 @@ dataavg<-addclustdf(data = datapca,vectors = avgclusters,k = k,
 #summary of means by cluster
 summaryavg<-dataavg %>%
     group_by_("k","cluster") %>%
-    summarize_all(mean) %>%
+    summarize_all(min) %>%
     left_join(dataavg %>%
                   group_by_("k","cluster") %>%
                   summarize(count=n()),by=c("k","cluster")) %>%
@@ -566,5 +566,4 @@ plotlistavg3<-dataavg %>%
 
 ggsave("plots/avgdensityk3.jpg",
        multiplot(plotlist=plotlistavg3,cols=3))
-
 
